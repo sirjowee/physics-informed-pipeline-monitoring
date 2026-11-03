@@ -1,0 +1,95 @@
+{
+  "commit": "d998b08",
+  "seed": 0,
+  "steps": 4000,
+  "config": {
+    "hidden": 64,
+    "depth": 3,
+    "latent": 32,
+    "lambda_phys": 0.1,
+    "lambda_sensor": 1.0,
+    "lr": 0.002,
+    "batch_scenarios": 32,
+    "n_collocation": 256,
+    "n_sensor_points": 64,
+    "steps": 4000,
+    "seed": 0
+  },
+  "runs": [
+    {
+      "name": "blackbox",
+      "lambda_phys": 0.0,
+      "train_seconds": 16.792761087417603,
+      "final_losses": {
+        "step": 3999,
+        "total": 0.16444535553455353,
+        "bce": 0.0003268152067903429,
+        "mse_loc": 0.0026177556719630957,
+        "mse_rate": 0.0004545500851236284,
+        "sensor": 0.16104623675346375,
+        "physics": 0.0
+      },
+      "accuracy": 0.8541666666666666,
+      "loc_mae_m": 838.033203125,
+      "rate_mape_pct": 50.879608154296875,
+      "score": 1.073646016438802
+    },
+    {
+      "name": "pinn_lambda_0.01",
+      "lambda_phys": 0.01,
+      "train_seconds": 24.56157636642456,
+      "final_losses": {
+        "step": 3999,
+        "total": 0.16356828808784485,
+        "bce": 0.0001757092250045389,
+        "mse_loc": 0.002788826357573271,
+        "mse_rate": 0.0003185952373314649,
+        "sensor": 0.15848997235298157,
+        "physics": 0.17951913177967072
+      },
+      "accuracy": 0.7916666666666666,
+      "loc_mae_m": 778.3378295898438,
+      "rate_mape_pct": 48.39600372314453,
+      "score": 1.0814622853597005
+    },
+    {
+      "name": "pinn_lambda_0.1",
+      "lambda_phys": 0.1,
+      "train_seconds": 24.48004984855652,
+      "final_losses": {
+        "step": 3999,
+        "total": 0.1836208701133728,
+        "bce": 0.00019670597976073623,
+        "mse_loc": 0.00731836399063468,
+        "mse_rate": 0.00031726653105579317,
+        "sensor": 0.1722635179758072,
+        "physics": 0.03525017946958542
+      },
+      "accuracy": 0.8125,
+      "loc_mae_m": 698.2742309570312,
+      "rate_mape_pct": 43.76199722290039,
+      "score": 0.9742570877075196
+    },
+    {
+      "name": "pinn_lambda_1",
+      "lambda_phys": 1.0,
+      "train_seconds": 24.10217595100403,
+      "final_losses": {
+        "step": 3999,
+        "total": 0.2015611231327057,
+        "bce": 0.00018011167412623763,
+        "mse_loc": 0.01120393630117178,
+        "mse_rate": 0.0011577042751014233,
+        "sensor": 0.18047034740447998,
+        "physics": 0.008549034595489502
+      },
+      "accuracy": 0.8541666666666666,
+      "loc_mae_m": 752.51806640625,
+      "rate_mape_pct": 47.04289627075195,
+      "score": 0.9925213292439778
+    }
+  ],
+  "selected_lambda_phys": 0.1,
+  "rttm_threshold_dq_rel": 0.0015411491034517445,
+  "rttm_val_accuracy": 1.0
+}

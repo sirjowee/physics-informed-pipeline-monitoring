@@ -40,12 +40,12 @@ https://www.ijsred.com/volume7/issue6/IJSRED-V7I6P142.pdf
 | Flow regimes | stratified, slug, annular | approximated by inlet gas fraction + interfacial drag coefficient (stratified 0.40 / 2 m⁻¹, slug 0.55 / 20 m⁻¹ with a ±0.15, 20 s inlet-fraction oscillation, annular 0.85 / 8 m⁻¹) |
 | Disturbances | Gaussian sensor noise; transient events | σ_p = 0.1 % of 60 bar, σ_Q = 0.5 % of nominal Q; inlet flow step ×U(0.8, 1.2) and/or outlet pressure ramp U(−2, +2) bar over 20 s, each with probability 0.5 at a time uniform in [60, 240] s, in leak and no-leak scenarios alike |
 | Physics | 1-D isothermal two-fluid model; per-phase mass + momentum conservation; leak as Dirac-delta sink at x_L | same equations solved by a batched finite-volume scheme (Rusanov flux, forward Euler, 50 cells, Δt = 0.05 s); isothermal ideal gas + incompressible liquid; delta represented as 1/Δx on the leak cell; leaking mass split between phases by local mass fraction (`leak_detection/data/two_fluid_solver.py`) |
-| Network | feed-forward MLP, tanh; inputs (x, P, Q); outputs leak prob., leak location, leak rate | |
-| Loss | BCE (detection) + MSE (location) + MSE (rate) + λ_phys · Σ‖R_mass‖² + ‖R_momentum‖² at collocation points | |
-| Derivatives | automatic differentiation | |
+| Network | feed-forward MLP, tanh; inputs (x, P, Q); outputs leak prob., leak location, leak rate | tanh MLPs: encoder (features → 32-d latent h), heads h → (leak logit, x_L/L, rate), field network (x/L, t/T, h) → (p, α_G, u_G, u_L); features are binned measured P and Q (§1.4) and x enters the field network (`leak_detection/pinn.py`) |
+| Loss | BCE (detection) + MSE (location) + MSE (rate) + λ_phys · Σ‖R_mass‖² + ‖R_momentum‖² at collocation points | same three data terms + a sensor-fit MSE on the field network's p and Q at x = 0 and x = L (how measured P, Q tie to the fields) + λ_phys × mean squared scaled residuals of the four two-fluid equations at random (x, t) in [0, L] × [200, 300] s, with the leak sink at the predicted location and rate |
+| Derivatives | automatic differentiation | `tf.GradientTape` on the field network w.r.t. x and t (`leak_detection/physics.py`) |
 | Split | event-based, disjoint train / val / test | same: whole scenarios, 60/20/20, stratified by (regime, leak), seeded |
-| Optimizer | Adam, "tuned" learning rate and batch size | |
-| Framework | TensorFlow 2.x | |
+| Optimizer | Adam, "tuned" learning rate and batch size | Adam, lr 2e-3, 32 scenarios per step, fixed by reasoning (§1.4); only λ_phys swept on validation |
+| Framework | TensorFlow 2.x | TensorFlow 2.18.1, CPU |
 
 ### 1.4 Parameters the paper does NOT specify (chosen here — record every choice)
 
@@ -60,19 +60,23 @@ The paper omits these. Each value below is this re-implementation's choice, not 
 | Friction / drag closure (F_k) | wall: Darcy f = 0.02 per phase, −(f/2D) α_k ρ_k u_k\|u_k\|; interfacial drag C_i α_G α_L ρ_G (u_G − u_L)\|u_G − u_L\| with C_i per regime (2, 20, 8 m⁻¹); no gravity (horizontal) | simplest textbook closures (Brennen 2005, ch. 7–8); C_i chosen so steady slip is 0.5–2 m/s |
 | Number of scenarios generated (leak / no-leak) | 240 total, 114 leak / 126 no-leak (seed 0), 80 per regime; `--full` gives 720 | sized for the 20-minute CPU budget (generation takes about 5 s) |
 | Time steps per scenario, Δt | 300 s at Δt = 0.05 s (6000 steps); sensors every 0.5 s (601 samples); field snapshots every 2 s (151 × 50 cells) | CFL ≈ 0.44; the initial linear pressure profile settles within ~100 s, before any leak opens |
+| Feature construction | window [60, 300] s averaged in 4 s bins (60 bins) × 5 channels (p_in, p_out, q_in, q_out, q_in − q_out), each channel standardised by its training-set mean/std; plus regime one-hot and nominal velocity / 5 m/s → 304 features | regime and nominal velocity are operator-known settings and the residual needs the regime's drag closure. A variant appending each channel's deviation from the scenario's pre-leak baseline (604 features) was tried and rejected on validation (PINN score 1.079 vs 0.870; black-box 1.178 vs 1.133) |
+| Residual scaling | mass residuals ÷ ρ_k U/L (U = 5 m/s), momentum residuals ÷ P/L (P = 5 bar); Dirac delta → Gaussian of width 40 m (one cell) | makes the four residuals O(1) and gives the location head a gradient |
 | Sensor noise σ | σ_p = 6 kPa (0.1 % of 60 bar); σ_Q = 0.5 % of the scenario's nominal Q; noise seed = data seed + 2 | order of a good field transmitter |
-| MLP depth × width | | |
-| λ_phys | | |
-| Learning rate, batch size, epochs | | |
-| Number of collocation points | | |
+| MLP depth × width | encoder 3 × 64 tanh → 32; heads 1 × 64 tanh; field network 3 × 64 tanh | smallest sizes that fit the 144-scenario training set in seconds; not tuned |
+| λ_phys | 0.1, chosen from {0.01, 0.1, 1.0} on the validation set by the score (1 − accuracy) + MAE_loc/L + min(MAPE, 1). Run used for the committed weights (`results/leak_selection.json`): validation accuracy / MAE / MAPE 0.812 / 698 m / 44 % at 0.1; 0.792 / 778 m / 48 % at 0.01; 0.854 / 753 m / 47 % at 1.0; black-box (λ = 0): 0.854 / 838 m / 51 %. | the only swept hyperparameter. **Reproducibility limit:** with λ_phys > 0 the training is not bit-reproducible on this machine (TensorFlow 2.18.1 CPU, macOS arm64) even with every random draw made in NumPy, op determinism on, single-threaded execution and oneDNN disabled; repeated same-seed runs differ by about ±0.05 in validation accuracy and ±100 m in MAE, so the choice between λ values is within run-to-run noise. The black-box run (λ = 0) reproduces exactly. Evaluation from the committed weights is deterministic. |
+| Learning rate, batch size, epochs | Adam 2e-3; 32 scenarios per step; 4000 steps (≈ 890 passes over the 144 training scenarios) | fixed before training; 13 ms per step on an M1 CPU |
+| Number of collocation points | 256 per step (8 per scenario), x ~ U(0, L), t ~ U(200, 300) s; plus 64 sensor samples per scenario per step for the sensor-fit term | physics window after every leak has fully opened, so no onset time is predicted |
 | Random seed(s) | data seed 0 (scenario draw, split uses seed + 1, noise seed + 2); model seeds recorded in §1.5 | one fixed seed per role |
-| Black-box baseline architecture | | same MLP, λ_phys = 0 |
-| RTTM baseline implementation | | mass-balance / transient residual thresholding — describe |
+| Black-box baseline architecture | identical network and training, λ_phys = 0 (sensor-fit term kept) | same MLP, λ_phys = 0 |
+| RTTM detection threshold | relative outlet-flow residual > 0.00154, chosen on the validation set (validation accuracy 1.000) | leak and no-leak residuals do not overlap on validation (noise std 0.0003 vs smallest leak 0.001) |
+| RTTM baseline implementation | the Phase 3 solver re-run per scenario under the no-leak assumption with the known boundary conditions; residuals averaged over [200, 300] s; detection by a threshold on the relative outlet-flow residual chosen on the validation set; rate = volumetric imbalance × inlet mixture density; location from the inlet-pressure residual via the friction argument x_L = L − Δp_in / (2 (Δp_model/L) ΔQ/Q) (`leak_detection/rttm.py`) | mass-balance / transient residual thresholding, simplified |
 
 ### 1.5 Reproduction notes (dated)
 
 - 2026-10-27 — Repository scaffolded; published figures transcribed above.
 - 2026-11-03 — Phase 3: batched 1-D two-fluid finite-volume generator implemented with the closures in §1.4; default dataset of 240 scenarios generated in about 5 s (`data/leak/leak_dataset.npz`, not committed; regenerate with `python scripts/leak_generate_data.py`). Checks: mass balance closes to machine precision with and without a leak; no-leak steady-state continuity residual below 5 % of the phase flux per cell; a 3 % leak at 900 m lowers outlet flow after onset while the pre-onset series are identical. Figure `figures/leak_detection/final_sensor_examples.png`. No model trained yet.
+- 2026-11-03 — Phase 4: PINN, black-box and simplified RTTM implemented (`leak_detection/pinn.py`, `physics.py`, `rttm.py`, `features.py`); `python scripts/leak_train.py` trains four networks (λ_phys ∈ {0, 0.01, 0.1, 1}) in about 1.6 min on an M1 CPU and selects λ_phys = 0.1 and the RTTM threshold on the validation set (`results/leak_selection.json`, weights in `results/leak_models/`). Validation numbers are in §1.4; they are far from the published figures already at this stage (networks: 79–85 % accuracy, 700–840 m localisation MAE, 44–51 % rate MAPE; RTTM: 100 %, 167 m, 9.6 %). Training with the physics term is not bit-reproducible on this machine (see the λ_phys row); the committed weights are the run reported. The test set has not been evaluated.
 
 ### 1.6 Known gaps between this re-implementation and the paper
 

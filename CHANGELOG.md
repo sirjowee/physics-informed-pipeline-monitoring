@@ -4,6 +4,11 @@ All notable changes to this re-implementation are recorded here. Dates are the d
 
 ## Unreleased
 
+### 2026-11-03 — Phase 4, PINN and baselines
+- Added `leak_detection/features.py` (binned sensor features, targets), `physics.py` (scaled two-fluid residuals shared by training and tests), `pinn.py` (encoder + heads + field network, data / sensor-fit / physics losses, Adam training, save/load), `rttm.py` (solver-based no-leak model, residual thresholding, friction-based localisation, mass-imbalance rate).
+- Added `scripts/leak_train.py` (λ_phys sweep and RTTM threshold on the validation set; writes `results/leak_selection.json` and weights) and tests (steady residuals, sink lowers residual, features, training reduces loss, determinism, RTTM).
+- RESULTS.md §1.3 network/loss/derivatives/optimizer/framework rows and §1.4 model rows filled; §1.5 dated note. A baseline-deviation feature variant was tried and rejected on validation. Training with λ_phys > 0 is not bit-reproducible on this machine (recorded in RESULTS.md §1.4); all sampling was moved to NumPy and op determinism enabled, which makes the λ = 0 run exactly reproducible.
+
 ### 2026-11-03 — Phase 3, leak-detection synthetic data generator
 - Added `leak_detection/data/config.py` (geometry, fluids, regimes, simulation and dataset settings), `two_fluid_solver.py` (batched 1-D isothermal two-fluid finite-volume solver with leak sink, friction and regime-dependent drag), `scenarios.py` (scenario sampling, sensor noise, event-based split, npz I/O).
 - Added `scripts/leak_generate_data.py` (default 240 scenarios, `--full` 720 × 600 s) and the sensor-example figure; tests for shapes, mass conservation, steady residual, leak effect, determinism, sampler and split.
