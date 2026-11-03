@@ -89,22 +89,24 @@ Adegboye, Komolafe & Joseph, *IJSRED* 7(6), Nov–Dec 2024, pp. 1317–1322 (app
 
 | Class | Precision (pub.) | Recall (pub.) | F1 (pub.) | Support (pub.) | Precision (repro) | Recall (repro) | F1 (repro) |
 |---|---|---|---|---|---|---|---|
-| Corrosion | 1.00 | 1.00 | 1.00 | 18 | | | |
-| Crack | 1.00 | 1.00 | 1.00 | 18 | | | |
-| Leak | 1.00 | 1.00 | 1.00 | 18 | | | |
-| Normal | 1.00 | 1.00 | 1.00 | 26 | | | |
-| **Overall accuracy** | **1.00** | | | **80** | | | |
+| Corrosion | 1.00 | 1.00 | 1.00 | 18 | 1.00 | 1.00 | 1.00 (support 20) |
+| Crack | 1.00 | 1.00 | 1.00 | 18 | 1.00 | 1.00 | 1.00 (support 20) |
+| Leak | 1.00 | 1.00 | 1.00 | 18 | 1.00 | 1.00 | 1.00 (support 20) |
+| Normal | 1.00 | 1.00 | 1.00 | 26 | 1.00 | 1.00 | 1.00 (support 20) |
+| **Overall accuracy** | **1.00** | | | **80** | **1.00** (80 test traces; run ccc31d6, data seed 0, model seed 0) | | |
 
 ### 2.2 Published results — noise robustness (Table 2 of the paper)
 
 | Noise σ | Accuracy (pub.) | Loss (pub.) | Precision (pub.) | Recall (pub.) | F1 (pub.) | Accuracy (repro) | Precision (repro) | Recall (repro) | F1 (repro) |
 |---|---|---|---|---|---|---|---|---|---|
-| 0.0 | 1.0000 | 0.2369 | 1.0000 | 1.0000 | 1.0000 | | | | |
-| 0.1 | 1.0000 | 0.3226 | 1.0000 | 1.0000 | 1.0000 | | | | |
-| 0.3 | 1.0000 | 0.2374 | 1.0000 | 1.0000 | 1.0000 | | | | |
-| 1.0 | 0.9375 | 0.2980 | 0.9056 | 0.9375 | 0.9320 | | | | |
+| 0.0 | 1.0000 | 0.2469 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
+| 0.1 | 1.0000 | 0.3226 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
+| 0.3 | 1.0000 | 0.2374 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
+| 1.0 | 0.8375 | 0.2980 | 0.9056 | 0.8375 | 0.8320 | 0.8625 | 0.8881 | 0.8625 | 0.8435 |
 
-Paper also reports at σ = 1.0: normal and leak classes retained 100 % recall; corrosion recall fell to 72 %; confusion was primarily corrosion ↔ other classes. Macro-F1 reported as 0.93.
+Transcription note (2026-11-03): the paper's printed Table 2 gives accuracy 0.8375, recall 0.8375 and F1 0.8320 at σ = 1.0 and a clean loss of 0.2469; the earlier transcription here (0.9375 / 0.9320 / 0.2369) was wrong and has been corrected to the printed table. The paper's text, however, says 94 % accuracy and macro-F1 0.93 at σ = 1.0, so the paper is internally inconsistent on this row. The text also reports at σ = 1.0: normal and leak retained 100 % recall; corrosion recall fell to 0.72 (F1 0.84); crack recall 1.00 with precision 0.78; confusion primarily corrosion ↔ other classes. Reproduced losses are far lower than the published ones (0.0001 vs 0.2469 clean) because this generator's clean traces are separable with near-certain softmax outputs; the published loss values suggest the original generator produced harder, more overlapping traces.
+
+Reproduced per-class at σ = 1.0 (run ccc31d6): normal P 1.00 / R 0.45 / F1 0.62; crack 0.80 / 1.00 / 0.89; corrosion 0.80 / 1.00 / 0.89; leak 0.95 / 1.00 / 0.98. Confusion (rows true, cols predicted, order normal/crack/corrosion/leak): [9 5 5 1], [0 20 0 0], [0 0 20 0], [0 0 0 20]. The confused class is **normal**, not corrosion as in the paper: see §2.5.
 
 ### 2.3 Experimental setup as described in the paper
 
@@ -116,8 +118,8 @@ Paper also reports at σ = 1.0: normal and leak classes retained 100 % recall; c
 | Dataset | 100 samples per class, 400 total, balanced, simulation-generated | same: 100 per class, 400 total, `generate_dataset(seed=0)` |
 | Noise model | x̃(f) = x(f) + N(0, σ²), σ ∈ {0.1, 0.3, 1.0} | same formula, added to the per-trace z-scored trace (see §2.4) |
 | Preprocessing | per-trace z-score normalization | same |
-| Model | Conv1D(32, k=5, ReLU) → MaxPool1D → Conv1D(64, k=3, ReLU) → MaxPool1D → Flatten → Dense(64) → Dropout(0.5) → Softmax(4) | |
-| Training | categorical cross-entropy; Adam lr = 0.001; batch 16; 50 epochs; early stopping | |
+| Model | Conv1D(32, k=5, ReLU) → MaxPool1D → Conv1D(64, k=3, ReLU) → MaxPool1D → Flatten → Dense(64) → Dropout(0.5) → Softmax(4) | exactly this (`shm_classification/model.py`); pool size 2, valid padding, ReLU on Dense(64) (see §2.4) |
+| Training | categorical cross-entropy; Adam lr = 0.001; batch 16; 50 epochs; early stopping | same; early stopping on validation loss, patience 10, best weights restored; run stopped at epoch 36 |
 | Split | 80/20 stratified | same, seeded; exactly 20 test samples per class |
 
 ### 2.4 Parameters the paper does NOT specify (chosen here)
@@ -128,7 +130,10 @@ Paper also reports at σ = 1.0: normal and leak classes retained 100 % recall; c
 | Within-class variation (defect size / material property ranges) | the uniform ranges above, drawn independently per trace | gives overlap between corrosion and leak without making classes inseparable |
 | Random seed(s) | data seed 0 (generator and split); model seeds recorded in §2.5 | one fixed seed per role |
 | Scale on which noise is added | per-trace z-scored trace (unit variance), so σ = 1.0 is 0 dB SNR | the only scale consistent with the paper's pattern: σ = 1.0 is negligible against a 25 dB dip in raw dB units, and σ = 0.3 already swamps the signal in linear \|S11\| units |
-| Early-stopping criterion | | |
+| Early-stopping criterion | validation loss, patience 10, restore best weights; validation set = 20 % of the training portion, stratified, seeded | the paper mentions early stopping without a criterion; the test set is never used for stopping |
+| Pooling size, padding, Dense activation | MaxPooling1D pool 2; "valid" padding; ReLU on Dense(64) | Keras defaults where the paper is silent |
+| Model seed | 0 (Glorot init, dropout, shuffling via `tf.keras.utils.set_random_seed`, deterministic ops on) | single seed; CPU run takes about 2 s |
+| Noise seeds at evaluation | 1000 + index of σ in (0.0, 0.1, 0.3, 1.0) | fixed per noise level |
 
 Note: the published clean-test support (18/18/18/26 = 80) is not perfectly balanced despite a balanced 400-sample dataset and a stratified split; this reproduction uses a true stratified split (20/20/20/20) and records the difference.
 
@@ -136,6 +141,7 @@ Note: the published clean-test support (18/18/18/26 = 80) is not perfectly balan
 
 - 2026-10-27 — Published figures transcribed.
 - 2026-11-03 — Phase 1: synthetic S11 generator, noise injection, normalisation and seeded stratified split implemented (`shm_classification/data/s11_simulator.py`); example figure `figures/shm_classification/final_s11_examples.png`. No model trained yet.
+- 2026-11-03 — Phase 2: 1D-CNN trained and evaluated once on the held-out test set (commit ccc31d6 for the data and model code, run via `python scripts/shm_train_eval.py --seed 0`, 36 epochs, 2.3 s on an M1 CPU; metrics in `results/shm_metrics.json`). Clean and σ = 0.1, 0.3: accuracy 1.0000 (paper: 1.0000). σ = 1.0: accuracy 0.8625, macro precision 0.8881, recall 0.8625, F1 0.8435 (paper table: 0.8375 / 0.9056 / 0.8375 / 0.8320; paper text: 0.94 / F1 0.93). Per-class corrosion recall at σ = 1.0 is **1.00 here versus 0.72 in the paper**; the class that degrades here is normal (recall 0.45), which is split between crack and corrosion. Likely cause: in this generator the normal resonance sits between the crack (shifted up) and corrosion (shifted down) resonances, so at 0 dB SNR it is the class with neighbours on both sides, whereas the original generator evidently made corrosion the subtlest signature. This is a property of the chosen signature mapping (§2.4), not of the network, and was not adjusted after seeing the test result.
 
 ---
 
