@@ -4,6 +4,11 @@ All notable changes to this re-implementation are recorded here. Dates are the d
 
 ## Unreleased
 
+### 2026-11-03 — Phase 3, leak-detection synthetic data generator
+- Added `leak_detection/data/config.py` (geometry, fluids, regimes, simulation and dataset settings), `two_fluid_solver.py` (batched 1-D isothermal two-fluid finite-volume solver with leak sink, friction and regime-dependent drag), `scenarios.py` (scenario sampling, sensor noise, event-based split, npz I/O).
+- Added `scripts/leak_generate_data.py` (default 240 scenarios, `--full` 720 × 600 s) and the sensor-example figure; tests for shapes, mass conservation, steady residual, leak effect, determinism, sampler and split.
+- RESULTS.md §1.3 "Implemented here" and §1.4 data rows filled; §1.5 dated note.
+
 ### 2026-11-03 — Phase 2, SHM 1D-CNN
 - Added `shm_classification/model.py` (published architecture), `train.py` (Adam 0.001, batch 16, 50 epochs, early stopping on an internal validation split), `evaluate.py` (clean and noisy test metrics, confusion matrices, training curves), `scripts/shm_train_eval.py`, tests.
 - RESULTS.md §2.1, §2.2, §2.3, §2.4 and §2.5 filled; Table 2 transcription corrected to the paper's printed values and the paper's text/table inconsistency noted.

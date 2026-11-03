@@ -34,16 +34,16 @@ https://www.ijsred.com/volume7/issue6/IJSRED-V7I6P142.pdf
 
 | Element | Paper says | Implemented here |
 |---|---|---|
-| Geometry | horizontal pipeline segment; pressure and flow sensors at inlet and outlet | |
-| Leak locations | uniform on [0, L] | |
-| Leak rates | 0.1 % – 5 % of nominal flow | |
-| Flow regimes | stratified, slug, annular | |
-| Disturbances | Gaussian sensor noise; transient events | |
-| Physics | 1-D isothermal two-fluid model; per-phase mass + momentum conservation; leak as Dirac-delta sink at x_L | |
+| Geometry | horizontal pipeline segment; pressure and flow sensors at inlet and outlet | horizontal, L = 2000 m, D = 0.3 m; p and mixture volumetric Q sampled at the first and last cell every 0.5 s |
+| Leak locations | uniform on [0, L] | same, `rng.uniform(0, L)`; sink placed on the cell containing x_L |
+| Leak rates | 0.1 % – 5 % of nominal flow | same, uniform in [0.001, 0.05] of the nominal mass flow, opened linearly over 5 s at an onset time uniform in [100, 180] s |
+| Flow regimes | stratified, slug, annular | approximated by inlet gas fraction + interfacial drag coefficient (stratified 0.40 / 2 m⁻¹, slug 0.55 / 20 m⁻¹ with a ±0.15, 20 s inlet-fraction oscillation, annular 0.85 / 8 m⁻¹) |
+| Disturbances | Gaussian sensor noise; transient events | σ_p = 0.1 % of 60 bar, σ_Q = 0.5 % of nominal Q; inlet flow step ×U(0.8, 1.2) and/or outlet pressure ramp U(−2, +2) bar over 20 s, each with probability 0.5 at a time uniform in [60, 240] s, in leak and no-leak scenarios alike |
+| Physics | 1-D isothermal two-fluid model; per-phase mass + momentum conservation; leak as Dirac-delta sink at x_L | same equations solved by a batched finite-volume scheme (Rusanov flux, forward Euler, 50 cells, Δt = 0.05 s); isothermal ideal gas + incompressible liquid; delta represented as 1/Δx on the leak cell; leaking mass split between phases by local mass fraction (`leak_detection/data/two_fluid_solver.py`) |
 | Network | feed-forward MLP, tanh; inputs (x, P, Q); outputs leak prob., leak location, leak rate | |
 | Loss | BCE (detection) + MSE (location) + MSE (rate) + λ_phys · Σ‖R_mass‖² + ‖R_momentum‖² at collocation points | |
 | Derivatives | automatic differentiation | |
-| Split | event-based, disjoint train / val / test | |
+| Split | event-based, disjoint train / val / test | same: whole scenarios, 60/20/20, stratified by (regime, leak), seeded |
 | Optimizer | Adam, "tuned" learning rate and batch size | |
 | Framework | TensorFlow 2.x | |
 
@@ -53,26 +53,26 @@ The paper omits these. Each value below is this re-implementation's choice, not 
 
 | Parameter | Value used | Rationale |
 |---|---|---|
-| Pipeline length L (m) | | |
-| Pipe diameter (m) | | |
-| Phase densities ρ_G, ρ_L (kg/m³) | | |
-| Nominal flow rate(s) | | |
-| Friction / drag closure (F_k) | | |
-| Number of scenarios generated (leak / no-leak) | | |
-| Time steps per scenario, Δt | | |
-| Sensor noise σ | | |
+| Pipeline length L (m) | 2000 | short enough for a 300 s transient to settle; confirmed with the author 2026-11-03 |
+| Pipe diameter (m) | 0.3 | typical gathering-line size; confirmed with the author |
+| Phase densities ρ_G, ρ_L (kg/m³) | ρ_G = 50 at 60 bar (isothermal ideal gas, c = √(p/ρ) ≈ 346 m/s); ρ_L = 850 incompressible | natural gas near 60 bar / 300 K; crude oil; confirmed with the author |
+| Nominal flow rate(s) | mixture velocities 1.5, 3.0, 4.5 m/s (Q ≈ 0.106, 0.212, 0.318 m³/s); inlet p ≈ 60 bar, outlet p = 55 bar boundary | three operating points cycled over scenarios; confirmed with the author |
+| Friction / drag closure (F_k) | wall: Darcy f = 0.02 per phase, −(f/2D) α_k ρ_k u_k\|u_k\|; interfacial drag C_i α_G α_L ρ_G (u_G − u_L)\|u_G − u_L\| with C_i per regime (2, 20, 8 m⁻¹); no gravity (horizontal) | simplest textbook closures (Brennen 2005, ch. 7–8); C_i chosen so steady slip is 0.5–2 m/s |
+| Number of scenarios generated (leak / no-leak) | 240 total, 114 leak / 126 no-leak (seed 0), 80 per regime; `--full` gives 720 | sized for the 20-minute CPU budget (generation takes about 5 s) |
+| Time steps per scenario, Δt | 300 s at Δt = 0.05 s (6000 steps); sensors every 0.5 s (601 samples); field snapshots every 2 s (151 × 50 cells) | CFL ≈ 0.44; the initial linear pressure profile settles within ~100 s, before any leak opens |
+| Sensor noise σ | σ_p = 6 kPa (0.1 % of 60 bar); σ_Q = 0.5 % of the scenario's nominal Q; noise seed = data seed + 2 | order of a good field transmitter |
 | MLP depth × width | | |
 | λ_phys | | |
 | Learning rate, batch size, epochs | | |
 | Number of collocation points | | |
-| Random seed(s) | | |
+| Random seed(s) | data seed 0 (scenario draw, split uses seed + 1, noise seed + 2); model seeds recorded in §1.5 | one fixed seed per role |
 | Black-box baseline architecture | | same MLP, λ_phys = 0 |
 | RTTM baseline implementation | | mass-balance / transient residual thresholding — describe |
 
 ### 1.5 Reproduction notes (dated)
 
 - 2026-10-27 — Repository scaffolded; published figures transcribed above.
--
+- 2026-11-03 — Phase 3: batched 1-D two-fluid finite-volume generator implemented with the closures in §1.4; default dataset of 240 scenarios generated in about 5 s (`data/leak/leak_dataset.npz`, not committed; regenerate with `python scripts/leak_generate_data.py`). Checks: mass balance closes to machine precision with and without a leak; no-leak steady-state continuity residual below 5 % of the phase flux per cell; a 3 % leak at 900 m lowers outlet flow after onset while the pre-onset series are identical. Figure `figures/leak_detection/final_sensor_examples.png`. No model trained yet.
 
 ### 1.6 Known gaps between this re-implementation and the paper
 
