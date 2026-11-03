@@ -1,0 +1,337 @@
+{
+  "commit": "9e73582",
+  "selection_commit": "d998b08",
+  "selected_lambda_phys": 0.1,
+  "rttm_threshold_dq_rel": 0.0015411491034517445,
+  "n_test": 48,
+  "metrics": {
+    "PINN": {
+      "accuracy": 0.8333333333333334,
+      "precision": 0.8260869565217391,
+      "recall": 0.8260869565217391,
+      "roc_auc": 0.8886956521739131,
+      "loc_mae_m": 536.1162719726562,
+      "rate_mape_pct": 45.81624221801758,
+      "n": 48,
+      "n_leak": 23,
+      "confusion": [
+        [
+          21,
+          4
+        ],
+        [
+          4,
+          19
+        ]
+      ]
+    },
+    "Black-box NN": {
+      "accuracy": 0.7916666666666666,
+      "precision": 0.8421052631578947,
+      "recall": 0.6956521739130435,
+      "roc_auc": 0.88,
+      "loc_mae_m": 631.9454956054688,
+      "rate_mape_pct": 54.84846878051758,
+      "n": 48,
+      "n_leak": 23,
+      "confusion": [
+        [
+          22,
+          3
+        ],
+        [
+          7,
+          16
+        ]
+      ]
+    },
+    "RTTM": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "roc_auc": 1.0,
+      "loc_mae_m": 264.749993542906,
+      "rate_mape_pct": 3.2559433868083074,
+      "n": 48,
+      "n_leak": 23,
+      "confusion": [
+        [
+          25,
+          0
+        ],
+        [
+          0,
+          23
+        ]
+      ]
+    }
+  },
+  "per_regime": {
+    "PINN": {
+      "stratified": {
+        "accuracy": 0.8125,
+        "precision": 0.7777777777777778,
+        "recall": 0.875,
+        "roc_auc": 0.890625,
+        "loc_mae_m": 741.0552978515625,
+        "rate_mape_pct": 50.37554931640625,
+        "n": 16,
+        "n_leak": 8,
+        "confusion": [
+          [
+            6,
+            2
+          ],
+          [
+            1,
+            7
+          ]
+        ]
+      },
+      "slug": {
+        "accuracy": 0.8125,
+        "precision": 0.8,
+        "recall": 0.6666666666666666,
+        "roc_auc": 0.8333333333333333,
+        "loc_mae_m": 389.2176513671875,
+        "rate_mape_pct": 48.05332565307617,
+        "n": 16,
+        "n_leak": 6,
+        "confusion": [
+          [
+            9,
+            1
+          ],
+          [
+            2,
+            4
+          ]
+        ]
+      },
+      "annular": {
+        "accuracy": 0.875,
+        "precision": 0.8888888888888888,
+        "recall": 0.8888888888888888,
+        "roc_auc": 0.9206349206349206,
+        "loc_mae_m": 451.8805236816406,
+        "rate_mape_pct": 40.27212142944336,
+        "n": 16,
+        "n_leak": 9,
+        "confusion": [
+          [
+            6,
+            1
+          ],
+          [
+            1,
+            8
+          ]
+        ]
+      }
+    },
+    "Black-box NN": {
+      "stratified": {
+        "accuracy": 0.75,
+        "precision": 0.75,
+        "recall": 0.75,
+        "roc_auc": 0.890625,
+        "loc_mae_m": 738.8504638671875,
+        "rate_mape_pct": 57.8972053527832,
+        "n": 16,
+        "n_leak": 8,
+        "confusion": [
+          [
+            6,
+            2
+          ],
+          [
+            2,
+            6
+          ]
+        ]
+      },
+      "slug": {
+        "accuracy": 0.8125,
+        "precision": 0.8,
+        "recall": 0.6666666666666666,
+        "roc_auc": 0.8666666666666667,
+        "loc_mae_m": 704.977294921875,
+        "rate_mape_pct": 60.21961975097656,
+        "n": 16,
+        "n_leak": 6,
+        "confusion": [
+          [
+            9,
+            1
+          ],
+          [
+            2,
+            4
+          ]
+        ]
+      },
+      "annular": {
+        "accuracy": 0.8125,
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "roc_auc": 0.873015873015873,
+        "loc_mae_m": 488.2312316894531,
+        "rate_mape_pct": 48.55770492553711,
+        "n": 16,
+        "n_leak": 9,
+        "confusion": [
+          [
+            7,
+            0
+          ],
+          [
+            3,
+            6
+          ]
+        ]
+      }
+    },
+    "RTTM": {
+      "stratified": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "roc_auc": 1.0,
+        "loc_mae_m": 322.327709940737,
+        "rate_mape_pct": 7.009580883672864,
+        "n": 16,
+        "n_leak": 8,
+        "confusion": [
+          [
+            8,
+            0
+          ],
+          [
+            0,
+            8
+          ]
+        ]
+      },
+      "slug": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "roc_auc": 1.0,
+        "loc_mae_m": 205.4337166452897,
+        "rate_mape_pct": 1.5597252715349148,
+        "n": 16,
+        "n_leak": 6,
+        "confusion": [
+          [
+            10,
+            0
+          ],
+          [
+            0,
+            6
+          ]
+        ]
+      },
+      "annular": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "roc_auc": 1.0,
+        "loc_mae_m": 253.11398578768896,
+        "rate_mape_pct": 1.050188799777629,
+        "n": 16,
+        "n_leak": 9,
+        "confusion": [
+          [
+            7,
+            0
+          ],
+          [
+            0,
+            9
+          ]
+        ]
+      }
+    }
+  },
+  "noise_robustness": {
+    "PINN": [
+      {
+        "noise_factor": 1.0,
+        "accuracy": 0.8333333333333334,
+        "loc_mae_m": 536.1162719726562,
+        "rate_mape_pct": 45.81624221801758
+      },
+      {
+        "noise_factor": 2.0,
+        "accuracy": 0.8541666666666666,
+        "loc_mae_m": 518.2965087890625,
+        "rate_mape_pct": 45.4841423034668
+      },
+      {
+        "noise_factor": 4.0,
+        "accuracy": 0.8125,
+        "loc_mae_m": 583.6461181640625,
+        "rate_mape_pct": 48.44819259643555
+      },
+      {
+        "noise_factor": 8.0,
+        "accuracy": 0.75,
+        "loc_mae_m": 498.9299011230469,
+        "rate_mape_pct": 52.40666961669922
+      }
+    ],
+    "Black-box NN": [
+      {
+        "noise_factor": 1.0,
+        "accuracy": 0.7916666666666666,
+        "loc_mae_m": 631.9454956054688,
+        "rate_mape_pct": 54.84846878051758
+      },
+      {
+        "noise_factor": 2.0,
+        "accuracy": 0.7916666666666666,
+        "loc_mae_m": 624.9921875,
+        "rate_mape_pct": 54.97734069824219
+      },
+      {
+        "noise_factor": 4.0,
+        "accuracy": 0.7916666666666666,
+        "loc_mae_m": 642.3228759765625,
+        "rate_mape_pct": 53.93663787841797
+      },
+      {
+        "noise_factor": 8.0,
+        "accuracy": 0.8125,
+        "loc_mae_m": 495.8204345703125,
+        "rate_mape_pct": 50.61064529418945
+      }
+    ],
+    "RTTM": [
+      {
+        "noise_factor": 1.0,
+        "accuracy": 1.0,
+        "loc_mae_m": 264.749993542906,
+        "rate_mape_pct": 3.2559433868083074
+      },
+      {
+        "noise_factor": 2.0,
+        "accuracy": 1.0,
+        "loc_mae_m": 332.0348145481137,
+        "rate_mape_pct": 6.277776613283733
+      },
+      {
+        "noise_factor": 4.0,
+        "accuracy": 0.9583333333333334,
+        "loc_mae_m": 540.7821102441121,
+        "rate_mape_pct": 8.791645114415285
+      },
+      {
+        "noise_factor": 8.0,
+        "accuracy": 0.8333333333333334,
+        "loc_mae_m": 707.9889878647466,
+        "rate_mape_pct": 11.350738418539938
+      }
+    ]
+  }
+}

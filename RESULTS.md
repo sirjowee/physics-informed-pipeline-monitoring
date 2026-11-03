@@ -15,20 +15,22 @@ https://www.ijsred.com/volume7/issue6/IJSRED-V7I6P142.pdf
 
 | Metric | Published | Reproduced | Run / commit | Notes |
 |---|---|---|---|---|
-| Detection accuracy | 0.95 | | | |
-| Precision | ~0.91 | | | |
-| Recall | ~0.91 | | | |
-| ROC-AUC | not reported | | | report anyway |
-| Localization MAE (m) | ~5 | | | |
-| Leak-rate MAPE (%) | ~1 | | | |
+| Detection accuracy | 0.95 | 0.833 | run 9e73582, weights from selection d998b08, data seed 0, model seed 0, 48 test scenarios (23 leak) | far below the paper |
+| Precision | ~0.91 | 0.826 | same | |
+| Recall | ~0.91 | 0.826 | same | |
+| ROC-AUC | not reported | 0.889 | same | report anyway |
+| Localization MAE (m) | ~5 | 536.1 | same | two orders of magnitude worse; over the 23 true-leak test scenarios |
+| Leak-rate MAPE (%) | ~1 | 45.8 | same | over the 23 true-leak test scenarios |
 
 ### 1.2 Published comparative results (Table 2 of the paper)
 
 | Model | Acc. (pub.) | Prec. (pub.) | Rec. (pub.) | Loc. err. m (pub.) | Rate err. % (pub.) | Acc. (repro) | Prec. (repro) | Rec. (repro) | Loc. err. m (repro) | Rate err. % (repro) |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PINN | 0.95 | 0.91 | 0.91 | ~5 | ~1 | | | | | |
-| Black-box NN (no physics loss) | 0.93 | 0.89 | 0.87 | ~11 | ~1.5 | | | | | |
-| RTTM (physics-only) | 0.88 | 0.81 | 0.79 | ~20 | ~2.4 | | | | | |
+| PINN | 0.95 | 0.91 | 0.91 | ~5 | ~1 | 0.833 | 0.826 | 0.826 | 536 | 45.8 |
+| Black-box NN (no physics loss) | 0.93 | 0.89 | 0.87 | ~11 | ~1.5 | 0.792 | 0.842 | 0.696 | 632 | 54.8 |
+| RTTM (physics-only) | 0.88 | 0.81 | 0.79 | ~20 | ~2.4 | 1.000 | 1.000 | 1.000 | 265 | 3.3 |
+
+Reproduced ROC-AUC: PINN 0.889, black-box 0.880, RTTM 1.000. Per-regime accuracy / localisation MAE / rate MAPE (test): PINN — stratified 0.812 / 741 m / 50 %; slug 0.812 / 389 m / 48 %; annular 0.875 / 452 m / 40 %; black-box — stratified 0.750 / 739 m / 58 %; slug 0.812 / 705 m / 60 %; annular 0.812 / 488 m / 49 %; RTTM — stratified 1.000 / 322 m / 7 %; slug 1.000 / 205 m / 2 %; annular 1.000 / 253 m / 1 %. Detection accuracy with the test sensors' noise multiplied by 1, 2, 4, 8: PINN 0.833, 0.854, 0.812, 0.750; black-box 0.792, 0.792, 0.792, 0.812; RTTM 1.000, 1.000, 0.958, 0.833. Figures: `figures/leak_detection/final_confusion_matrices.png`, `final_location_scatter.png`, `final_rate_scatter.png`, `final_noise_robustness.png`. Source: `results/leak_metrics.json`.
 
 ### 1.3 Experimental setup as described in the paper
 
@@ -76,13 +78,16 @@ The paper omits these. Each value below is this re-implementation's choice, not 
 
 - 2026-10-27 — Repository scaffolded; published figures transcribed above.
 - 2026-11-03 — Phase 3: batched 1-D two-fluid finite-volume generator implemented with the closures in §1.4; default dataset of 240 scenarios generated in about 5 s (`data/leak/leak_dataset.npz`, not committed; regenerate with `python scripts/leak_generate_data.py`). Checks: mass balance closes to machine precision with and without a leak; no-leak steady-state continuity residual below 5 % of the phase flux per cell; a 3 % leak at 900 m lowers outlet flow after onset while the pre-onset series are identical. Figure `figures/leak_detection/final_sensor_examples.png`. No model trained yet.
-- 2026-11-03 — Phase 4: PINN, black-box and simplified RTTM implemented (`leak_detection/pinn.py`, `physics.py`, `rttm.py`, `features.py`); `python scripts/leak_train.py` trains four networks (λ_phys ∈ {0, 0.01, 0.1, 1}) in about 1.6 min on an M1 CPU and selects λ_phys = 0.1 and the RTTM threshold on the validation set (`results/leak_selection.json`, weights in `results/leak_models/`). Validation numbers are in §1.4; they are far from the published figures already at this stage (networks: 79–85 % accuracy, 700–840 m localisation MAE, 44–51 % rate MAPE; RTTM: 100 %, 167 m, 9.6 %). Training with the physics term is not bit-reproducible on this machine (see the λ_phys row); the committed weights are the run reported. The test set has not been evaluated.
+- 2026-11-03 — Phase 4: PINN, black-box and simplified RTTM implemented (`leak_detection/pinn.py`, `physics.py`, `rttm.py`, `features.py`); `python scripts/leak_train.py` trains four networks (λ_phys ∈ {0, 0.01, 0.1, 1}) in about 1.6 min on an M1 CPU and selects λ_phys = 0.1 and the RTTM threshold on the validation set (`results/leak_selection.json`, weights in `results/leak_models/`). Validation numbers are in §1.4; they are far from the published figures already at this stage (networks: 79–85 % accuracy, 700–840 m localisation MAE, 44–51 % rate MAPE; RTTM: 100 %, 167 m, 9.6 %). Training with the physics term is not bit-reproducible on this machine (see the λ_phys row); the committed weights are the run reported. The test set has not been evaluated at this stage.
+- 2026-11-03 — Phase 5: single evaluation on the 48 held-out test scenarios (`python scripts/leak_evaluate.py`, run 9e73582; deterministic from the committed weights, verified by two identical runs). **The PINN does not reproduce the published numbers.** Detection accuracy 0.833 (paper 0.95), localisation MAE 536 m (paper ~5 m), rate MAPE 46 % (paper ~1 %). The ordering PINN > black-box holds on every metric (accuracy 0.833 vs 0.792, MAE 536 vs 632 m, MAPE 46 vs 55 %), which is the paper's qualitative claim, but the margin is within the run-to-run noise recorded in §1.4. The simplified RTTM is far better than both networks (1.000 / 265 m / 3.3 %) and than the paper's RTTM (0.88 / ~20 m / ~2.4 %). Likely causes, in order: (1) the RTTM here re-runs the exact generator with the exact boundary conditions, so its model-plant mismatch is zero, which no field RTTM enjoys; (2) the networks see 144 training scenarios and 60 time bins per channel, a far smaller and coarser dataset than a GPU-trained original would have used; the paper does not give its dataset size; (3) no hyperparameter other than λ_phys was tuned, by design; (4) localisation from two end-point sensors is intrinsically a weak signal for a 0.1–5 % leak at 0.1 % pressure noise, and the ~5 m published figure is not approached by any method here, including the physics-only one. None of these numbers were adjusted after seeing the test set.
 
 ### 1.6 Known gaps between this re-implementation and the paper
 
 - The paper reports results on a dataset whose size and generator parameters are not given; this reproduction uses the parameters in §1.4.
 - The paper's statement "code and synthetic datasets available upon request" referred to the original development repository, which is no longer available (see README). This repository is a from-scratch re-implementation.
 - Uncertainty quantification (ensembles / MC-dropout) was not explored in the paper and is not implemented here.
+- The published 95 % / ~5 m / ~1 % figures were not reproduced (§1.5, 2026-11-03). The paper's input feature construction, physics-residual evaluation on a network that outputs only three scalars, dataset size and training budget are all unspecified; the interpretation in §1.4 is one reading of the paper, not the original code.
+- Training with the physics term is not bit-reproducible on the machine used (§1.4, λ_phys row); evaluation from the committed weights is.
 
 ---
 

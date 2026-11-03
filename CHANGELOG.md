@@ -4,6 +4,10 @@ All notable changes to this re-implementation are recorded here. Dates are the d
 
 ## Unreleased
 
+### 2026-11-03 — Phase 5, leak-detection evaluation
+- Added `leak_detection/evaluate.py` and `scripts/leak_evaluate.py`: single test-set evaluation of PINN, black-box and RTTM (accuracy, precision, recall, ROC-AUC, localisation MAE, rate MAPE, per-regime breakdown, noise-robustness sweep), `results/leak_metrics.json` and four figures.
+- RESULTS.md §1.1 and §1.2 "Reproduced" columns filled; §1.5 dated note stating that the published figures were not reproduced, with likely causes; §1.6 known gaps extended.
+
 ### 2026-11-03 — Phase 4, PINN and baselines
 - Added `leak_detection/features.py` (binned sensor features, targets), `physics.py` (scaled two-fluid residuals shared by training and tests), `pinn.py` (encoder + heads + field network, data / sensor-fit / physics losses, Adam training, save/load), `rttm.py` (solver-based no-leak model, residual thresholding, friction-based localisation, mass-imbalance rate).
 - Added `scripts/leak_train.py` (λ_phys sweep and RTTM threshold on the validation set; writes `results/leak_selection.json` and weights) and tests (steady residuals, sink lowers residual, features, training reduces loss, determinism, RTTM).
