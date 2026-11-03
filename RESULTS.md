@@ -110,23 +110,24 @@ Paper also reports at σ = 1.0: normal and leak classes retained 100 % recall; c
 
 | Element | Paper says | Implemented here |
 |---|---|---|
-| Sensing | patch antenna mounted on pipeline; reflection coefficient \|S11\| | |
-| Frequency sweep | 1–10 GHz, 0.1 GHz resolution → 91 points per trace | |
-| Classes | normal, crack, corrosion, leak | |
-| Dataset | 100 samples per class, 400 total, balanced, simulation-generated | |
-| Noise model | x̃(f) = x(f) + N(0, σ²), σ ∈ {0.1, 0.3, 1.0} | |
-| Preprocessing | per-trace z-score normalization | |
+| Sensing | patch antenna mounted on pipeline; reflection coefficient \|S11\| | analytic \|S11\|(dB) model: sloped mismatch baseline minus a Lorentzian resonance dip plus a weaker second-harmonic dip (no full-wave solver) |
+| Frequency sweep | 1–10 GHz, 0.1 GHz resolution → 91 points per trace | same: 1.0, 1.1, …, 10.0 GHz, 91 points |
+| Classes | normal, crack, corrosion, leak | same, integer labels in that order |
+| Dataset | 100 samples per class, 400 total, balanced, simulation-generated | same: 100 per class, 400 total, `generate_dataset(seed=0)` |
+| Noise model | x̃(f) = x(f) + N(0, σ²), σ ∈ {0.1, 0.3, 1.0} | same formula, added to the per-trace z-scored trace (see §2.4) |
+| Preprocessing | per-trace z-score normalization | same |
 | Model | Conv1D(32, k=5, ReLU) → MaxPool1D → Conv1D(64, k=3, ReLU) → MaxPool1D → Flatten → Dense(64) → Dropout(0.5) → Softmax(4) | |
 | Training | categorical cross-entropy; Adam lr = 0.001; batch 16; 50 epochs; early stopping | |
-| Split | 80/20 stratified | |
+| Split | 80/20 stratified | same, seeded; exactly 20 test samples per class |
 
 ### 2.4 Parameters the paper does NOT specify (chosen here)
 
 | Parameter | Value used | Rationale |
 |---|---|---|
-| S11 signature model per class (resonance shift, damping, bandwidth change) | | paper describes qualitative effects only |
-| Within-class variation (defect size / material property ranges) | | |
-| Random seed(s) | | |
+| S11 signature model per class (resonance shift, damping, bandwidth change) | Normal: resonance f0 ~ U(4.9, 5.1) GHz, dip depth U(23, 27) dB, FWHM U(0.55, 0.65) GHz. Crack: shift U(+0.3, +0.8) GHz, depth U(18, 22) dB, FWHM × U(0.8, 0.95). Corrosion: shift U(−0.6, −0.2) GHz, depth U(10, 16) dB, FWHM × U(1.5, 2.5). Leak: shift U(−1.5, −0.8) GHz, depth U(15, 20) dB, FWHM × U(1.2, 1.8). Baseline U(−4, −2) dB with slope U(−0.15, 0.05) dB/GHz; second-harmonic dip at 2·f0 with 0.35 × depth and 1.6 × FWHM. | paper describes qualitative effects only (section II); directions follow the paper's own physical reasoning: a crack lowers effective permittivity (shift up), corrosion products and leaked fluid are lossy and raise permittivity (shift down, damping, broadening); corrosion made the subtlest class, matching the paper's finding that it is the one confused under noise. Mapping confirmed with the author 2026-11-03. |
+| Within-class variation (defect size / material property ranges) | the uniform ranges above, drawn independently per trace | gives overlap between corrosion and leak without making classes inseparable |
+| Random seed(s) | data seed 0 (generator and split); model seeds recorded in §2.5 | one fixed seed per role |
+| Scale on which noise is added | per-trace z-scored trace (unit variance), so σ = 1.0 is 0 dB SNR | the only scale consistent with the paper's pattern: σ = 1.0 is negligible against a 25 dB dip in raw dB units, and σ = 0.3 already swamps the signal in linear \|S11\| units |
 | Early-stopping criterion | | |
 
 Note: the published clean-test support (18/18/18/26 = 80) is not perfectly balanced despite a balanced 400-sample dataset and a stratified split; this reproduction uses a true stratified split (20/20/20/20) and records the difference.
@@ -134,7 +135,7 @@ Note: the published clean-test support (18/18/18/26 = 80) is not perfectly balan
 ### 2.5 Reproduction notes (dated)
 
 - 2026-10-27 — Published figures transcribed.
--
+- 2026-11-03 — Phase 1: synthetic S11 generator, noise injection, normalisation and seeded stratified split implemented (`shm_classification/data/s11_simulator.py`); example figure `figures/shm_classification/final_s11_examples.png`. No model trained yet.
 
 ---
 
