@@ -3,8 +3,9 @@
 Usage:
     python scripts/leak_generate_data.py [--seed 0] [--n-scenarios 240] [--full]
 
-``--full`` uses 720 scenarios (240 per regime) and a 600 s run; the default is sized for
-the 20-minute CPU budget. Writes ``data/leak/leak_dataset.npz`` and
+``--full`` uses 720 scenarios (240 per regime); the default is sized for the 20-minute
+CPU budget. The 300 s run length is kept in both modes because the feature and physics
+windows are defined on it. Writes ``data/leak/leak_dataset.npz`` and
 ``figures/leak_detection/final_sensor_examples.png`` (inlet/outlet pressure and flow for
 one leak and one no-leak scenario per regime).
 """
@@ -25,7 +26,6 @@ import matplotlib.pyplot as plt  # noqa: E402
 from pipeline_monitoring.leak_detection.data import (  # noqa: E402
     REGIME_NAMES,
     DatasetConfig,
-    SimulationConfig,
     generate_dataset,
     save_dataset,
 )
@@ -84,7 +84,7 @@ def main() -> None:
 
     cfg = DatasetConfig(seed=args.seed)
     if args.full:
-        cfg = replace(cfg, n_scenarios=720, sim=SimulationConfig(duration_s=600.0))
+        cfg = replace(cfg, n_scenarios=720)
     if args.n_scenarios is not None:
         cfg = replace(cfg, n_scenarios=args.n_scenarios)
 

@@ -1,23 +1,23 @@
 {
-  "commit": "9e73582",
-  "selection_commit": "d998b08",
-  "selected_lambda_phys": 0.1,
+  "commit": "9cd8002",
+  "selection_commit": "9cd8002",
+  "selected_lambda_phys": 1.0,
   "rttm_threshold_dq_rel": 0.0015411491034517445,
   "n_test": 48,
   "metrics": {
     "PINN": {
-      "accuracy": 0.8333333333333334,
-      "precision": 0.8260869565217391,
+      "accuracy": 0.875,
+      "precision": 0.9047619047619048,
       "recall": 0.8260869565217391,
-      "roc_auc": 0.8886956521739131,
-      "loc_mae_m": 536.1162719726562,
-      "rate_mape_pct": 45.81624221801758,
+      "roc_auc": 0.9321739130434783,
+      "loc_mae_m": 444.5556640625,
+      "rate_mape_pct": 48.45075225830078,
       "n": 48,
       "n_leak": 23,
       "confusion": [
         [
-          21,
-          4
+          23,
+          2
         ],
         [
           4,
@@ -69,18 +69,18 @@
   "per_regime": {
     "PINN": {
       "stratified": {
-        "accuracy": 0.8125,
-        "precision": 0.7777777777777778,
+        "accuracy": 0.875,
+        "precision": 0.875,
         "recall": 0.875,
-        "roc_auc": 0.890625,
-        "loc_mae_m": 741.0552978515625,
-        "rate_mape_pct": 50.37554931640625,
+        "roc_auc": 0.9375,
+        "loc_mae_m": 579.3199462890625,
+        "rate_mape_pct": 49.53123092651367,
         "n": 16,
         "n_leak": 8,
         "confusion": [
           [
-            6,
-            2
+            7,
+            1
           ],
           [
             1,
@@ -89,12 +89,12 @@
         ]
       },
       "slug": {
-        "accuracy": 0.8125,
-        "precision": 0.8,
-        "recall": 0.6666666666666666,
-        "roc_auc": 0.8333333333333333,
-        "loc_mae_m": 389.2176513671875,
-        "rate_mape_pct": 48.05332565307617,
+        "accuracy": 0.9375,
+        "precision": 0.8571428571428571,
+        "recall": 1.0,
+        "roc_auc": 0.9666666666666667,
+        "loc_mae_m": 253.0045166015625,
+        "rate_mape_pct": 50.467918395996094,
         "n": 16,
         "n_leak": 6,
         "confusion": [
@@ -103,28 +103,28 @@
             1
           ],
           [
-            2,
-            4
+            0,
+            6
           ]
         ]
       },
       "annular": {
-        "accuracy": 0.875,
-        "precision": 0.8888888888888888,
-        "recall": 0.8888888888888888,
-        "roc_auc": 0.9206349206349206,
-        "loc_mae_m": 451.8805236816406,
-        "rate_mape_pct": 40.27212142944336,
+        "accuracy": 0.8125,
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "roc_auc": 0.9206349206349207,
+        "loc_mae_m": 452.4660949707031,
+        "rate_mape_pct": 46.14555358886719,
         "n": 16,
         "n_leak": 9,
         "confusion": [
           [
-            6,
-            1
+            7,
+            0
           ],
           [
-            1,
-            8
+            3,
+            6
           ]
         ]
       }
@@ -258,27 +258,27 @@
     "PINN": [
       {
         "noise_factor": 1.0,
-        "accuracy": 0.8333333333333334,
-        "loc_mae_m": 536.1162719726562,
-        "rate_mape_pct": 45.81624221801758
+        "accuracy": 0.875,
+        "loc_mae_m": 444.5556640625,
+        "rate_mape_pct": 48.45075225830078
       },
       {
         "noise_factor": 2.0,
         "accuracy": 0.8541666666666666,
-        "loc_mae_m": 518.2965087890625,
-        "rate_mape_pct": 45.4841423034668
+        "loc_mae_m": 437.2875671386719,
+        "rate_mape_pct": 51.49290466308594
       },
       {
         "noise_factor": 4.0,
-        "accuracy": 0.8125,
-        "loc_mae_m": 583.6461181640625,
-        "rate_mape_pct": 48.44819259643555
+        "accuracy": 0.875,
+        "loc_mae_m": 521.2117309570312,
+        "rate_mape_pct": 54.768898010253906
       },
       {
         "noise_factor": 8.0,
-        "accuracy": 0.75,
-        "loc_mae_m": 498.9299011230469,
-        "rate_mape_pct": 52.40666961669922
+        "accuracy": 0.8125,
+        "loc_mae_m": 488.1690673828125,
+        "rate_mape_pct": 65.84244537353516
       }
     ],
     "Black-box NN": [

@@ -1,0 +1,33 @@
+{
+  "commit": "9cd8002",
+  "seed": 0,
+  "full": false,
+  "total_seconds": 118.0066990852356,
+  "steps": [
+    {
+      "step": "1/5 SHM: generate S11 dataset",
+      "seconds": 0.5501067638397217,
+      "command": "scripts/shm_generate_data.py --seed 0"
+    },
+    {
+      "step": "2/5 SHM: train and evaluate 1D-CNN",
+      "seconds": 6.951902151107788,
+      "command": "scripts/shm_train_eval.py --seed 0"
+    },
+    {
+      "step": "3/5 Leak: generate two-fluid dataset",
+      "seconds": 5.778198003768921,
+      "command": "scripts/leak_generate_data.py --seed 0"
+    },
+    {
+      "step": "4/5 Leak: train PINN / black-box, select on validation, RTTM threshold",
+      "seconds": 94.5601499080658,
+      "command": "scripts/leak_train.py --seed 0 --steps 4000"
+    },
+    {
+      "step": "5/5 Leak: evaluate on the test set",
+      "seconds": 10.166073083877563,
+      "command": "scripts/leak_evaluate.py"
+    }
+  ]
+}

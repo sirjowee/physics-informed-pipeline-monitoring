@@ -28,7 +28,12 @@ from pipeline_monitoring.leak_detection.evaluate import (
     save_figures,
     with_extra_noise,
 )
-from pipeline_monitoring.leak_detection.features import RATE_SCALE, Normaliser, build_targets
+from pipeline_monitoring.leak_detection.features import (
+    RATE_SCALE,
+    Normaliser,
+    build_features,
+    build_targets,
+)
 from pipeline_monitoring.leak_detection.pinn import PINNConfig, load_model
 
 REPO = Path(__file__).resolve().parents[1]
@@ -59,7 +64,7 @@ def main() -> None:
     te = d["test_idx"]
     nz = np.load(args.results / "leak_models" / "normaliser.npz")
     norm = Normaliser(nz["mean"], nz["std"])
-    n_features = 60 * 5 + 4
+    n_features = build_features(d, te[:1], norm).shape[1]
     cfg_kw = {k: v for k, v in sel["config"].items() if k != "lambda_phys"}
     pinn = load_model(
         args.results / "leak_models" / "pinn.weights.h5",
