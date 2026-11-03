@@ -2,7 +2,11 @@
 
 All notable changes to this re-implementation are recorded here. Dates are the dates the work was done; nothing is backdated.
 
-## Unreleased
+## v0.1-rfe — 2026-11-03
+
+### 2026-11-03 — Phase 7, release
+- RESULTS.md: summary of reproduction at the top, status line, paper-2 known gaps (§2.6), remaining note cells filled.
+- Tagged `v0.1-rfe`.
 
 ### 2026-11-03 — Phase 6, reproduce-all and docs
 - Added `scripts/reproduce_all.py` and a `Makefile` (`make reproduce`, `make reproduce-full`, `make test`, `make lint`); default run 2.0 min on an M1 CPU.

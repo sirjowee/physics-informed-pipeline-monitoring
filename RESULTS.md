@@ -1,9 +1,19 @@
 # RESULTS.md — Reproduction log
 
-**Status:** in progress. Re-implementation started 2026-10-26 by Ibrahim M. Joseph (third author).
+**Status:** v0.1-rfe, 2026-11-03. Re-implementation started 2026-10-26 by Ibrahim M. Joseph (third author); every "Reproduced" cell below is filled.
 All numbers in the "Reproduced" columns are produced by the code in this repository on synthetic/simulated data, exactly as in the original papers. Where a reproduced number differs from the published one, the difference is recorded here on the day it is observed and is not tuned away.
 
 Published figures are transcribed from the papers as printed. Nothing in this file is a claim of field validation.
+
+---
+
+## Summary of reproduction (v0.1-rfe, 2026-11-03)
+
+**Paper 2 (SHM, 1D-CNN on |S11| traces): reproduced on an independent synthetic generator.** Clean test accuracy 1.0000 and 1.0000 / 1.0000 at σ = 0.1 / 0.3, as published (1.00). At σ = 1.0: accuracy 0.8625, macro-F1 0.8435 against the paper's printed Table 2 (0.8375 / 0.8320; its text says 0.94 / 0.93). The class that degrades under noise is normal here (recall 0.45) rather than corrosion (paper: recall 0.72); that is a property of the signature mapping chosen in §2.4, not of the network.
+
+**Paper 1 (PINN leak detection): not reproduced.** On the two-fluid generator built here the PINN reaches detection accuracy 0.875, localisation MAE 445 m and rate MAPE 48 % against the published 0.95 / ~5 m / ~1 %. The black-box network gives 0.792 / 632 m / 55 % (published 0.93 / ~11 m / ~1.5 %) and the simplified physics-only RTTM 1.000 / 265 m / 3.3 % (published 0.88 / ~20 m / ~2.4 %). The paper's qualitative claim that the PINN beats the black-box network holds on detection and localisation in both runs made, but the margin is within run-to-run noise, and the physics-only baseline beats both networks here because it re-runs the exact generator. Likely causes are listed in §1.5; training with the physics term is not bit-reproducible on the machine used (§1.4).
+
+Everything in this file was produced on synthetic data by the code in this repository, from the fixed seeds, by `make reproduce` (2.0 min on an M1 CPU). No number was adjusted after the test sets were evaluated.
 
 ---
 
@@ -16,8 +26,8 @@ https://www.ijsred.com/volume7/issue6/IJSRED-V7I6P142.pdf
 | Metric | Published | Reproduced | Run / commit | Notes |
 |---|---|---|---|---|
 | Detection accuracy | 0.95 | 0.875 | `make reproduce` at commit 9cd8002, data seed 0, model seed 0, 48 test scenarios (23 leak) | far below the paper |
-| Precision | ~0.91 | 0.905 | same | |
-| Recall | ~0.91 | 0.826 | same | |
+| Precision | ~0.91 | 0.905 | same | close to the paper, but with far fewer leaks detected per metre of error |
+| Recall | ~0.91 | 0.826 | same | 4 of 23 test leaks missed |
 | ROC-AUC | not reported | 0.932 | same | report anyway |
 | Localization MAE (m) | ~5 | 444.6 | same | two orders of magnitude worse; over the 23 true-leak test scenarios |
 | Leak-rate MAPE (%) | ~1 | 48.5 | same | over the 23 true-leak test scenarios |
@@ -102,7 +112,7 @@ Adegboye, Komolafe & Joseph, *IJSRED* 7(6), Nov–Dec 2024, pp. 1317–1322 (app
 | Crack | 1.00 | 1.00 | 1.00 | 18 | 1.00 | 1.00 | 1.00 (support 20) |
 | Leak | 1.00 | 1.00 | 1.00 | 18 | 1.00 | 1.00 | 1.00 (support 20) |
 | Normal | 1.00 | 1.00 | 1.00 | 26 | 1.00 | 1.00 | 1.00 (support 20) |
-| **Overall accuracy** | **1.00** | | | **80** | **1.00** (80 test traces; run ccc31d6, data seed 0, model seed 0) | | |
+| **Overall accuracy** | **1.00** | | | **80** | **1.00** (80 test traces; run ccc31d6, identical in `make reproduce` at 9cd8002; data seed 0, model seed 0) | | |
 
 ### 2.2 Published results — noise robustness (Table 2 of the paper)
 
@@ -151,6 +161,13 @@ Note: the published clean-test support (18/18/18/26 = 80) is not perfectly balan
 - 2026-10-27 — Published figures transcribed.
 - 2026-11-03 — Phase 1: synthetic S11 generator, noise injection, normalisation and seeded stratified split implemented (`shm_classification/data/s11_simulator.py`); example figure `figures/shm_classification/final_s11_examples.png`. No model trained yet.
 - 2026-11-03 — Phase 2: 1D-CNN trained and evaluated once on the held-out test set (commit ccc31d6 for the data and model code, run via `python scripts/shm_train_eval.py --seed 0`, 36 epochs, 2.3 s on an M1 CPU; metrics in `results/shm_metrics.json`). Clean and σ = 0.1, 0.3: accuracy 1.0000 (paper: 1.0000). σ = 1.0: accuracy 0.8625, macro precision 0.8881, recall 0.8625, F1 0.8435 (paper table: 0.8375 / 0.9056 / 0.8375 / 0.8320; paper text: 0.94 / F1 0.93). Per-class corrosion recall at σ = 1.0 is **1.00 here versus 0.72 in the paper**; the class that degrades here is normal (recall 0.45), which is split between crack and corrosion. Likely cause: in this generator the normal resonance sits between the crack (shifted up) and corrosion (shifted down) resonances, so at 0 dB SNR it is the class with neighbours on both sides, whereas the original generator evidently made corrosion the subtlest signature. This is a property of the chosen signature mapping (§2.4), not of the network, and was not adjusted after seeing the test result.
+
+### 2.6 Known gaps between this re-implementation and the paper
+
+- The paper generated traces with CST Microwave Studio and custom scripts; this repository uses an analytic single-resonance |S11| model (§2.4). The absolute separability of the classes, and therefore the clean-test loss (0.0001 here vs 0.2469 published), depends on that choice.
+- Under σ = 1.0 noise the class that degrades is normal here and corrosion in the paper; the confusion structure is a property of the signature mapping, not of the network.
+- The paper's Table 2 and text disagree at σ = 1.0 (0.8375 vs 0.94 accuracy); the printed table is used as the published value.
+- The published clean-test supports (18/18/18/26) do not match a stratified 80/20 split of a balanced 400-sample set; this repository uses 20/20/20/20.
 
 ---
 
